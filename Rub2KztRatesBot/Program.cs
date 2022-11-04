@@ -35,6 +35,7 @@ builder.Services.AddSingleton<IRateProvider, BinanceP2PExchanger>();
 builder.Services.AddSingleton<RatesService>();
 //+мтс деньги
 //+тинькофф мир снятие
+//+фридом
 
 var app = builder.Build();
 
