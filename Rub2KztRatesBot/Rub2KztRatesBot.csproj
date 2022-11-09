@@ -15,10 +15,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Controllers" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Compile Update="Entities\Valute.cs">
         <DependentUpon>ValCurs.cs</DependentUpon>
       </Compile>

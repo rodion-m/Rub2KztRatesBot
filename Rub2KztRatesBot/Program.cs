@@ -34,8 +34,9 @@ builder.Services.AddSingleton<IRateProvider, MirPayRate>();
 builder.Services.AddSingleton<IRateProvider, BinanceP2PExchanger>();
 builder.Services.AddSingleton<RatesService>();
 //+мтс деньги
-//+тинькофф мир снятие
-//+фридом
+//+фридом банк
+//+фридом брокер
+//+https://moneysend.money/
 
 var app = builder.Build();
 
