@@ -32,11 +32,14 @@ builder.Services.AddSingleton<IRateProvider, KoronaPay>();
 builder.Services.AddSingleton<IRateProvider, PochtaBankRate>();
 builder.Services.AddSingleton<IRateProvider, MirPayRate>();
 builder.Services.AddSingleton<IRateProvider, BinanceP2PExchanger>();
+builder.Services.AddSingleton<IRateProvider, MoneySendRateProvider>();
 builder.Services.AddSingleton<RatesService>();
 //+мтс деньги
 //+фридом банк
 //+фридом брокер
 //+https://moneysend.money/
+
+builder.Services.AddHostedService<TelegramBotBackgroundService>();
 
 var app = builder.Build();
 
@@ -52,9 +55,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapGet("/", (RatesService service) =>
-{
-    return service.GetRates();
-});
+app.MapGet("/", (RatesService service) => service.GetRates());
 
 app.Run();
