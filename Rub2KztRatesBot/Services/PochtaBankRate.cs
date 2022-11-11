@@ -14,11 +14,12 @@ public class PochtaBankRate : IRateProvider
     
     public async ValueTask<decimal> GetKztPerRubRate()
     {
+        //Todo parse table
         var uri = "https://www.pochtabank.ru/support/currencies";
         var selector = "//*[@id=\"wrapper\"]/div[2]/div[2]/div/div[5]/div/div[2]/div[2]/div[14]/div[4]/div";
-        var sRate = await _parser.Parse(uri, selector);
-        if (sRate is null) throw new NullReferenceException(nameof(sRate));
-        var rate = decimal.Parse(sRate);
+        var result = await _parser.ParseString(uri, selector);
+        result.ThrowIfFailed();
+        var rate = decimal.Parse(result.TextContent!);
         return 1m / rate;
     }
 }

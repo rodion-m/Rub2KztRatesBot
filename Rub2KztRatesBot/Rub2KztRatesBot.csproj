@@ -6,6 +6,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="AngleSharp" Version="0.17.1" />
         <PackageReference Include="AngleSharp.XPath" Version="2.0.1" />

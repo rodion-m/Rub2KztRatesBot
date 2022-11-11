@@ -7,54 +7,71 @@ using Serilog.Events;
 
 CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/log-.txt", LogEventLevel.Debug, rollingInterval: RollingInterval.Day)
+    .CreateBootstrapLogger();
 
-builder.Host.UseSerilog((_, configuration) =>
+try
 {
-    configuration
-        .WriteTo.Console()
-        .WriteTo.File("logs/log-.txt", LogEventLevel.Debug, rollingInterval: RollingInterval.Day);
-});
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+    builder.Host.UseSerilog((_, configuration) =>
+    {
+        configuration
+            .WriteTo.Console()
+            .WriteTo.File("logs/log-.txt", LogEventLevel.Debug,
+                rollingInterval: RollingInterval.Day);
+    });
 
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<IClock, ClockMsk>();
-builder.Services.AddSingleton<CbrClient>();
-builder.Services.AddSingleton<BinanceP2PClient>();
-builder.Services.AddSingleton<HttpValueParser>();
-builder.Services.AddSingleton<IRateProvider, CbrRateProvider>();
-builder.Services.AddSingleton<IRateProvider, QiwiExchanger>();
-builder.Services.AddSingleton<IRateProvider, TinkoffExchanger>();
-builder.Services.AddSingleton<IRateProvider, KoronaPay>();
-builder.Services.AddSingleton<IRateProvider, PochtaBankRate>();
-builder.Services.AddSingleton<IRateProvider, MirPayRate>();
-builder.Services.AddSingleton<IRateProvider, BinanceP2PExchanger>();
-builder.Services.AddSingleton<IRateProvider, MoneySendRateProvider>();
-builder.Services.AddSingleton<RatesService>();
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+    builder.Services.AddMemoryCache();
+    builder.Services.AddSingleton<IClock, ClockMsk>();
+    builder.Services.AddSingleton<CbrClient>();
+    builder.Services.AddSingleton<BinanceP2PClient>();
+    builder.Services.AddTransient<HttpValueParser>();
+    builder.Services.AddSingleton<IRateProvider, CbrRateProvider>();
+    builder.Services.AddSingleton<IRateProvider, QiwiExchanger>();
+    builder.Services.AddSingleton<IRateProvider, TinkoffExchanger>();
+    builder.Services.AddSingleton<IRateProvider, KoronaPay>();
+    builder.Services.AddSingleton<IRateProvider, PochtaBankRate>();
+    builder.Services.AddSingleton<IRateProvider, MirPayRate>();
+    builder.Services.AddSingleton<IRateProvider, BinanceP2PExchanger>();
+//builder.Services.AddSingleton<IRateProvider, MoneySendRateProvider>();
+    builder.Services.AddSingleton<RatesService>();
 //+мтс деньги
 //+фридом банк
 //+фридом брокер
-//+https://moneysend.money/
 
-builder.Services.AddHostedService<TelegramBotBackgroundService>();
+    builder.Services.AddHostedService<TelegramBotBackgroundService>();
 
-var app = builder.Build();
+    var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseHttpsRedirection();
+
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    app.MapGet("/", (RatesService service) => service.GetRates());
+
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.MapGet("/", (RatesService service) => service.GetRates());
-
-app.Run();
+catch (Exception e)
+{
+    Log.Logger.Fatal(e, "EXCEPTION ON PROGRAM STARTUP");
+}
+finally
+{
+    Log.Logger.Information("Closing");
+    Log.CloseAndFlush();
+}

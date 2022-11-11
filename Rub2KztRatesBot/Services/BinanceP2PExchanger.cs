@@ -4,7 +4,7 @@ namespace Rub2KztRatesBot.Services;
 
 public class BinanceP2PExchanger : IRateProvider
 {
-    public string Name => "Binance P2P";
+    public string Name => "Binance (P2P)";
     private readonly BinanceP2PClient _binanceClient;
 
     public BinanceP2PExchanger(BinanceP2PClient binanceClient)

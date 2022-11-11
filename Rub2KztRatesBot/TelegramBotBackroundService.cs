@@ -67,14 +67,20 @@ public class TelegramBotBackgroundService : BackgroundService
         else
             return;
 
-
-        var sentMessage = await botClient.SendTextMessageAsync(
-            chatId: chatId,
-            text: await GetBotResponse(),
-            replyMarkup: _replyMarkup,
-            parseMode: ParseMode.Html,
-            cancellationToken: cancellationToken
-        );
+        try
+        {
+            await botClient.SendTextMessageAsync(
+                chatId: chatId,
+                text: await GetBotResponse(),
+                replyMarkup: _replyMarkup,
+                parseMode: ParseMode.Html,
+                cancellationToken: cancellationToken
+            );
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error while sending message to user");
+        }
     }
 
     private async Task<string> GetBotResponse()

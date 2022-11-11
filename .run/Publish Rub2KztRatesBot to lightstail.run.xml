@@ -1,0 +1,6 @@
+﻿<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Publish Rub2KztRatesBot to lightstail" type="DotNetPublishAndUpload" factoryName="Publish to custom server">
+    <riderPublish configuration="Release" platform="Any CPU" runtime="linux-x64" server_id="1fa25062-da97-4f0a-a6b2-c95bcd7a8b5b" serverName="Lightstail-1gb-2cpu-40gb-2tb" target_framework="net6.0" uuid_high="5381658327371827266" uuid_low="-4823294947690902772" />
+    <method v="2" />
+  </configuration>
+</component>
