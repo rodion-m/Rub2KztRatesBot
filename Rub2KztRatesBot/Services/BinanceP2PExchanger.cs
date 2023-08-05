@@ -4,30 +4,39 @@ namespace Rub2KztRatesBot.Services;
 
 public class BinanceP2PExchanger : IRateProvider
 {
-    public string Name => "Binance (P2P)";
-    private readonly BinanceP2PClient _binanceClient;
+    public string Name { get; }
 
-    public BinanceP2PExchanger(BinanceP2PClient binanceClient)
+    private readonly BinanceP2PClient _binanceClient;
+    private readonly string _asset;
+    private readonly decimal _amount;
+
+    public BinanceP2PExchanger(
+        BinanceP2PClient binanceClient, string name, string asset, decimal amount = 10_000)
     {
-        _binanceClient = binanceClient;
+        _binanceClient = binanceClient ?? throw new ArgumentNullException(nameof(binanceClient));
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+        _asset = asset ?? throw new ArgumentNullException(nameof(asset));
+        _amount = amount;
     }
 
     public async ValueTask<decimal> GetKztPerRubRate()
     {
-        var rubAdv = await _binanceClient.GetUsdtAdvertisements(
-            TradeType.Buy, "RUB", "TinkoffNew", 10_000);
-        var minRateRubToUsdt = rubAdv.Data.Min(a => a.Adv.PriceDecimal);
-        await Pause();
-        var kztAdv = await _binanceClient.GetUsdtAdvertisements(
-            TradeType.Sell, "KZT", "KaspiBank", 50_000);
-        var maxRateUsdtToKzt = kztAdv.Data.Max(a => a.Adv.PriceDecimal);
+        var rubAdv = await _binanceClient.GetAdvertisements(
+            TradeType.Buy, "RUB", _asset, "TinkoffNew", _amount);
+        var minRateRubToAsset = rubAdv.Data.Min(a => a.Adv.PriceDecimal);
+        await RandomPause(1000, 2000);
+        var kztAmount = Math.Round(_amount * minRateRubToAsset);
+        var kztAdv = await _binanceClient.GetAdvertisements(
+            TradeType.Sell, "KZT", _asset, "KaspiBank", kztAmount);
+        var maxRateAssetToKzt = kztAdv.Data.Max(a => a.Adv.PriceDecimal);
         //for example: 475 / 65
-        var kztPerRubRate = maxRateUsdtToKzt / minRateRubToUsdt;
+        var kztPerRubRate = maxRateAssetToKzt / minRateRubToAsset;
         return kztPerRubRate;
     }
 
-    private static async Task Pause()
+    private static async Task RandomPause(int minMilliseconds, int maxMilliseconds)
     {
-        await Task.Delay(TimeSpan.FromMilliseconds(Random.Shared.Next(1000, 2000)));
+        var ms = Random.Shared.Next(minMilliseconds, maxMilliseconds);
+        await Task.Delay(ms);
     }
 }

@@ -3,7 +3,12 @@ using System.Text.Json;
 
 namespace Rub2KztRatesBot.Binance;
 
-public class BinanceP2PClient
+//TODO asset and fiat enums
+/// <summary>
+/// Unoffical client for Binance P2P platform.
+/// </summary>
+/// <remarks>This class is thread safe.</remarks>
+public class BinanceP2PClient : IDisposable
 {
     private readonly HttpClient _httpClient = new(new HttpClientHandler
     {
@@ -14,23 +19,31 @@ public class BinanceP2PClient
     };
 
     //https://p2p.binance.com/en/trade/all-payments/USDT?fiat=RUB
-    public async Task<BinanceAdvertisementsResponse> GetUsdtAdvertisements(
+    public Task<BinanceAdvertisementsResponse> GetUsdtAdvertisements(
         TradeType tradeType, string fiat, string? paymentType, decimal? amount = null)
     {
-        var request = new BinanceAdvertisementsRequest()
-        {
-            Asset = "USDT",
-            TradeType = tradeType == TradeType.Buy ? "BUY" : "SELL",
-            Fiat = fiat,
-            PayTypes = paymentType is not null 
-                ? new []{ paymentType } 
-                : Array.Empty<string>(),
-            TransAmount = amount?.ToString(),
-            Page = 1,
-            Rows = 10
-        };
-        //var sr = JsonSerializer.Serialize(request);
-        var requestMessage = new HttpRequestMessage
+        if (fiat == null) throw new ArgumentNullException(nameof(fiat));
+        return GetAdvertisements(tradeType, fiat, "USDT", paymentType, amount);
+    }
+    
+    public async Task<BinanceAdvertisementsResponse> GetAdvertisements(
+        TradeType tradeType, string fiat, string asset, string? paymentType, decimal? amount = null)
+    {
+        if (fiat == null) throw new ArgumentNullException(nameof(fiat));
+        if (asset == null) throw new ArgumentNullException(nameof(asset));
+        var request = CreateBinanceAdvertisementsRequest(tradeType, fiat, asset, paymentType, amount);
+        var requestMessage = CreateRequestMessage(request);
+        using var response = await _httpClient.SendAsync(requestMessage);
+        response.EnsureSuccessStatusCode();
+        //var result = await response.Content.ReadFromJsonAsync<BinanceAdvertisementsResponse>();
+        var s = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<BinanceAdvertisementsResponse>(s)!;
+    }
+
+    private static HttpRequestMessage CreateRequestMessage(BinanceAdvertisementsRequest request)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        return new HttpRequestMessage
         {
             Method = HttpMethod.Post,
             RequestUri = new Uri("https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search"),
@@ -67,11 +80,29 @@ public class BinanceP2PClient
             },
             Content = JsonContent.Create(request)
         };
+    }
 
-        using var response = await _httpClient.SendAsync(requestMessage);
-        response.EnsureSuccessStatusCode();
-        //var result = await response.Content.ReadFromJsonAsync<BinanceAdvertisementsResponse>();
-        var s = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<BinanceAdvertisementsResponse>(s)!;
+    private static BinanceAdvertisementsRequest CreateBinanceAdvertisementsRequest(
+        TradeType tradeType, string fiat, string asset, string? paymentType, decimal? amount)
+    {
+        if (fiat == null) throw new ArgumentNullException(nameof(fiat));
+        if (asset == null) throw new ArgumentNullException(nameof(asset));
+        return new BinanceAdvertisementsRequest()
+        {
+            Asset = asset,
+            TradeType = tradeType == TradeType.Buy ? "BUY" : "SELL",
+            Fiat = fiat,
+            PayTypes = paymentType is not null 
+                ? new []{ paymentType } 
+                : Array.Empty<string>(),
+            TransAmount = amount?.ToString(),
+            Page = 1,
+            Rows = 10
+        };
+    }
+
+    public void Dispose()
+    {
+        _httpClient.Dispose();
     }
 }

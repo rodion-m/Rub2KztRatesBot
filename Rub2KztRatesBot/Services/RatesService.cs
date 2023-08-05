@@ -40,7 +40,7 @@ public class RatesService
                 try
                 {
                     var rate = await p.GetKztPerRubRate();
-                    return new RateInfo(p.Name, Math.Round(rate, 2, MidpointRounding.ToNegativeInfinity));
+                    return new RateInfo(p.Name, Math.Round(rate, 2));
                 }
                 catch (Exception e)
                 {

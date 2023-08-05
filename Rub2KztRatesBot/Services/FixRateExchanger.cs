@@ -9,8 +9,9 @@ public abstract class FixRateExchanger : IRateProvider
 
     public FixRateExchanger(string name, decimal fee, CbrClient rateProvider)
     {
-        _rateProvider = rateProvider;
-        Name = name;
+        if (fee < 0) throw new ArgumentOutOfRangeException(nameof(fee));
+        _rateProvider = rateProvider ?? throw new ArgumentNullException(nameof(rateProvider));
+        Name = name ?? throw new ArgumentNullException(nameof(name));
         Fee = fee;
     }
     

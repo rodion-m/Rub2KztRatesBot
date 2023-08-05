@@ -1,9 +1,15 @@
 ﻿namespace Rub2KztRatesBot.Services;
 
-public class QiwiExchanger : FixRateExchanger
+public class QiwiExchanger : IRateProvider
 {
-    public QiwiExchanger(CbrClient rateProvider) 
-        : base("QIWI", 0.06m, rateProvider)
+    private readonly PochtaBankRate _pochtaBank;
+    public string Name => "QIWI";
+
+    public QiwiExchanger(PochtaBankRate pochtaBank)
     {
+        _pochtaBank = pochtaBank;
     }
+    
+    public ValueTask<decimal> GetKztPerRubRate() => _pochtaBank.GetKztPerRubRate();
+
 }
